@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from .mouth_state_detector import process_frame
 from .eye_state_detector import detect_eye_state  # Import the new eye state detection function
+from .eye_blink_detector import detect_eye_blinks  # Import the new eye blink detection function
 from starlette.websockets import WebSocketState
 import json
 
@@ -54,6 +55,31 @@ async def eye_state_websocket(websocket: WebSocket):
             await websocket.send_json({"status": status, "frame": frame_encoded.tobytes().hex()})
     except WebSocketDisconnect:
         print("Eye state WebSocket connection closed")
+    except Exception as e:
+        print(f"Connection closed with error: {e}")
+    finally:
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.close()
+
+@app.websocket("/ws/eye-blink")
+async def eye_blink_websocket(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            parsed_data = json.loads(data)
+            frame_data = parsed_data['frame']
+            show_landmarks = parsed_data['showLandmarks']
+            
+            nparr = np.array(frame_data, dtype=np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            status, processed_frame = detect_eye_blinks(frame, show_landmarks)
+            _, frame_encoded = cv2.imencode('.jpg', processed_frame)
+            
+            await websocket.send_json({"status": status, "frame": frame_encoded.tobytes().hex()})
+    except WebSocketDisconnect:
+        print("Eye blink WebSocket connection closed")
     except Exception as e:
         print(f"Connection closed with error: {e}")
     finally:
