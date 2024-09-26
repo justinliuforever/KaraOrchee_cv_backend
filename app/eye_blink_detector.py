@@ -9,7 +9,7 @@ mp_drawing = mp.solutions.drawing_utils
 def detect_eye_blinks(frame, show_landmarks=True):
     # Configuration parameters
     EAR_THRESHOLD = 0.2  # Adjusted threshold for determining blinks
-    BLINK_TIME_THRESHOLD = 1.0  # Maximum time between blinks (in seconds)
+    DOUBLE_BLINK_TIME_THRESHOLD = 1  # Maximum time between blinks for a double blink (in seconds)
     BLINK_FRAMES_THRESHOLD = 2  # Minimum number of frames for a blink
 
     # Variables for blink detection
@@ -18,6 +18,7 @@ def detect_eye_blinks(frame, show_landmarks=True):
     last_blink_time = None
     current_status = "No Blink"
     ear_history = []
+    double_blink_detected = False
 
     def calculate_eye_aspect_ratio(landmarks):
         left_eye_indices = [33, 160, 158, 133, 153, 144]  # Left eye landmarks
@@ -87,8 +88,12 @@ def detect_eye_blinks(frame, show_landmarks=True):
                         if blink_duration >= BLINK_FRAMES_THRESHOLD * (1/30):  # Assuming 30 FPS
                             blink_counter += 1
                             current_status = f"Blink Detected ({blink_counter})"
-                            if last_blink_time is not None and time.time() - last_blink_time <= BLINK_TIME_THRESHOLD:
-                                current_status = f"Double Blink Detected ({blink_counter})"
+                            
+                            if last_blink_time is not None and time.time() - last_blink_time <= DOUBLE_BLINK_TIME_THRESHOLD:
+                                current_status = "Double Blink Detected"
+                                double_blink_detected = True
+                                blink_counter = 0  # Reset blink counter after a double blink
+                            
                             last_blink_time = time.time()
                         blink_start_time = None
 
@@ -97,7 +102,4 @@ def detect_eye_blinks(frame, show_landmarks=True):
                 cv2.putText(frame_bgr, f"Blinks: {blink_counter}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.putText(frame_bgr, f"Status: {current_status}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-        # Display blink status on the frame
-        cv2.putText(frame_bgr, f"Status: {current_status}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        return current_status, frame_bgr  # Return status and processed frame
+        return current_status, frame_bgr, double_blink_detected  # Return status, processed frame, and double blink flag

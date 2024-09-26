@@ -74,10 +74,21 @@ async def eye_blink_websocket(websocket: WebSocket):
             nparr = np.array(frame_data, dtype=np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
-            status, processed_frame = detect_eye_blinks(frame, show_landmarks)
+            status, processed_frame, double_blink_detected = detect_eye_blinks(frame, show_landmarks)
             _, frame_encoded = cv2.imencode('.jpg', processed_frame)
             
-            await websocket.send_json({"status": status, "frame": frame_encoded.tobytes().hex()})
+            response_data = {
+                "status": status,
+                "frame": frame_encoded.tobytes().hex(),
+                "doubleBlinkDetected": double_blink_detected
+            }
+            
+            await websocket.send_json(response_data)
+            
+            if double_blink_detected:
+                # Trigger your action here, e.g., play/stop music
+                print("Double blink detected! Trigger action.")
+                # You can add your action logic here or send a separate message to the frontend
     except WebSocketDisconnect:
         print("Eye blink WebSocket connection closed")
     except Exception as e:
