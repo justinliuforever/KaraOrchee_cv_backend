@@ -58,20 +58,19 @@ def detect_head_pose(frame):
                 pitch, yaw, roll = eulerAngles.flatten()
 
                 # 显示角度信息
-                cv2.putText(frame_bgr, f"Pitch: {pitch:.2f}", (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                cv2.putText(frame_bgr, f"Yaw: {yaw:.2f}", (10, 60),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                cv2.putText(frame_bgr, f"Roll: {roll:.2f}", (10, 90),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                # cv2.putText(frame_bgr, f"Pitch: {pitch:.2f}", (10, 30),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                # cv2.putText(frame_bgr, f"Yaw: {yaw:.2f}", (10, 60),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                # cv2.putText(frame_bgr, f"Roll: {roll:.2f}", (10, 90),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
                 # 根据Pitch角度判断是否触发事件
-                # 您可以根据需求设置阈值，例如：
                 if pitch > 10:  # 当头部抬起超过10度
                     status = "Music Play"
                 else:
                     status = "Music Pause"
 
-                return status, frame_bgr
+                return status, frame_bgr, pitch, yaw, roll
 
-        return "No Face Detected", frame_bgr
+        return "No Face Detected", frame_bgr, None, None, None

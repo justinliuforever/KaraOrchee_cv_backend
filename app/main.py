@@ -110,10 +110,16 @@ async def head_pose_websocket(websocket: WebSocket):
             nparr = np.frombuffer(bytes.fromhex(frame_data), dtype=np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-            status, processed_frame = detect_head_pose(frame)
+            status, processed_frame, pitch, yaw, roll = detect_head_pose(frame)
             _, frame_encoded = cv2.imencode('.jpg', processed_frame)
 
-            await websocket.send_json({"status": status, "frame": frame_encoded.tobytes().hex()})
+            await websocket.send_json({
+                "status": status,
+                "frame": frame_encoded.tobytes().hex(),
+                "pitch": pitch,
+                "yaw": yaw,
+                "roll": roll
+            })
     except WebSocketDisconnect:
         print("Head pose WebSocket connection closed")
     except Exception as e:
